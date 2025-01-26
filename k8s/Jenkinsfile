@@ -1,0 +1,75 @@
+pipeline {
+    agent any
+    environment {
+        REPO_URL = credentials('REPO_URL')
+        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        AWS_DEFAULT_REGION = 'us-east-2'
+    }
+    stages {
+        stage('Checkout SCM') {
+            steps {
+                script {
+                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: "${env.REPO_URL}"]]])
+                }
+            }
+        }
+         stage('Initializing Terraform') {
+            steps {
+                script {
+                    dir('k8s') {
+                         sh 'terraform init'
+                    }
+                }
+            }
+        }
+        stage('Formating terraform code') {
+            steps {
+                script {
+                    dir('k8s') {
+                         sh 'terraform fmt'
+                    }
+                }
+            }
+        }
+        stage('Validating Terraform') {
+            steps {
+                script {
+                    dir('k8s') {
+                         sh 'terraform validate'
+                    }
+                }
+            }
+        }
+        stage('Previewing the infrastructure') {
+            steps {
+                script {
+                    dir('k8s') {
+                         sh 'terraform plan'
+                    }
+                    input(message: "Are you sure you want to proceed?", ok: "proceed")
+                }
+            }
+        }
+        stage('Creating/Destroying an k8s cluster') {
+            steps {
+                script {
+                    dir('k8s') {
+                         sh 'terraform $action --auto-approve'
+                    }
+                }
+            }
+        }
+        stage("Deploying Nginx") {
+            steps {
+                script {
+                    dir('k8s/configuration-files') {
+                        sh 'aws eks update-kubeconfig --name my-eks-cluster'
+                        sh 'kubectl apply -f deployment.yml'
+                        sh 'kubectl apply -f service.yml'
+                    }
+                }
+            }
+        }
+    }
+}
