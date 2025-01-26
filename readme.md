@@ -15,10 +15,6 @@ The pipeline consists of two main steps:
 2. After the Jenkins server is up, configure a Jenkins pipeline job to use the Jenkinsfile in the `k8s/` directory.
 3. Ensure the AWS credentials are configured in Jenkins and trigger the pipeline to create the EKS cluster and deploy nginx.
 
-## Cleanup
-
-To destroy the resources, run `terraform destroy` in both the `jenkins-server/` and `k8s/` directories, depending on which resources you want to remove.
-
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
