@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudwatch-agent-config
+  namespace: kube-system
+data:
+  cloudwatch-agent-config.json: |
+    {
+      "metrics": {
+        "append_dimensions": {
+          "InstanceId": "${aws:InstanceId}"
+        },
+        "metrics_collected": {
+          "cpu": {
+            "measurement": [
+              "cpu_usage_idle",
+              "cpu_usage_user",
+              "cpu_usage_system"
+            ],
+            "metrics_collection_interval": 60
+          },
+          "mem": {
+            "measurement": [
+              "mem_used",
+              "mem_free",
+              "mem_cached"
+            ],
+            "metrics_collection_interval": 60
+          }
+        }
+      }
+    }
+

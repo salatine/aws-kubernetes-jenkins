@@ -60,6 +60,39 @@ pipeline {
                 }
             }
         }
+        stage('Deploying CloudWatch Agent') {
+            steps {
+                script {
+                    dir('k8s/configuration-files') {
+                        sh 'kubectl apply -f cloudwatch-agent-configmap.yaml'
+                        sh 'kubectl apply -f cloudwatch-agent-daemonset.yaml'
+                    }
+                }
+            }
+        }
+        stage('Deploying Prometheus and Grafana') {
+            steps {
+                script {
+                    dir('k8s/configuration-files') {
+                        sh 'kubectl create namespace monitoring'
+                        sh 'kubectl apply -f prometheus-deployment.yaml'
+                        sh 'kubectl apply -f prometheus-configmap.yaml'
+                        sh 'kubectl apply -f grafana-deployment.yaml'
+                    }
+                }
+            }
+        }
+        stage("Deploying Nginx") {
+            steps {
+                script {
+                    dir('k8s/configuration-files') {
+                        sh 'aws eks update-kubeconfig --name my-eks-cluster'
+                        sh 'kubectl apply -f deployment.yml'
+                        sh 'kubectl apply -f service.yml'
+                    }
+                }
+            }
+        }
         stage("Deploying Nginx") {
             steps {
                 script {
